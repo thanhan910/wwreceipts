@@ -133,17 +133,26 @@ def get_pages_edges_data(pages):
     page_count = len(pages)
     page_edges_all = {}
     bottom_edge_in_2_to_last_page = False
+    summary_in_last_page = True
     for page_number in range(page_count, 0, -1):
         page = pages[page_number]
         main_rects = page["rects"][:-10]
         page_edges = {}
         if page_number == page_count:
-            page_edges["summary"] = main_rects[-4:-1]
-            page_edges["rewards"] = main_rects[-1]
             if len(main_rects) < (6 + 7 + 6 + 3 + 1):
                 assert len(main_rects) in {3 + 1, 1}, len(main_rects)
                 bottom_edge_in_2_to_last_page = True
+                summary_in_last_page = (len(main_rects) == 3 + 1)
+                if summary_in_last_page:
+                    page_edges["summary"] = main_rects[-4:-1]
+                    page_edges["rewards"] = main_rects[-1]
+                else:
+                    page_edges["rewards"] = main_rects[-1]
             else:
+                bottom_edge_in_2_to_last_page = False
+                summary_in_last_page = True
+                page_edges["summary"] = main_rects[-4:-1]
+                page_edges["rewards"] = main_rects[-1]
                 assert (len(main_rects) - (6 + 7 + 6 + 3 + 1)) % 7 == 0, len(main_rects)
                 page_edges["top"] = main_rects[1:13:2]
                 page_edges["side"] = main_rects[0:13:2] + main_rects[13:-10]
@@ -153,12 +162,21 @@ def get_pages_edges_data(pages):
         else:
             assert len(main_rects) >= 6 + 7, len(main_rects)
             if page_number == page_count - 1 and bottom_edge_in_2_to_last_page:
-                assert (len(main_rects) - (6 + 7 + 6)) % 7 == 0, len(main_rects)  # Number of edges is 6 + 7 + 7 * n + 6
-                page_edges["top"] = main_rects[1:13:2]
-                page_edges["side"] = main_rects[0:13:2] + main_rects[13:-6]
-                assert len(page_edges["side"]) % 7 == 0, len(page_edges["side"])
-                page_edges["side"] = [page_edges["side"][i:i + 7] for i in range(0, len(page_edges["side"]), 7)]  # Split into chunks of 7
-                page_edges["bottom"] = main_rects[-6:]
+                if summary_in_last_page:
+                    assert (len(main_rects) - (6 + 7 + 6)) % 7 == 0, len(main_rects)  # Number of edges is 6 + 7 + 7 * n + 6
+                    page_edges["top"] = main_rects[1:13:2]
+                    page_edges["side"] = main_rects[0:13:2] + main_rects[13:-6]
+                    assert len(page_edges["side"]) % 7 == 0, len(page_edges["side"])
+                    page_edges["side"] = [page_edges["side"][i:i + 7] for i in range(0, len(page_edges["side"]), 7)]  # Split into chunks of 7
+                    page_edges["bottom"] = main_rects[-6:]
+                else:
+                    assert (len(main_rects) - (6 + 7 + 6 + 3)) % 7 == 0, len(main_rects)  # Number of edges is 6 + 7 + 7 * n + 6
+                    page_edges["top"] = main_rects[1:13:2]
+                    page_edges["side"] = main_rects[0:13:2] + main_rects[13:-9]
+                    assert len(page_edges["side"]) % 7 == 0, len(page_edges["side"])
+                    page_edges["side"] = [page_edges["side"][i:i + 7] for i in range(0, len(page_edges["side"]), 7)]  # Split into chunks of 7
+                    page_edges["bottom"] = main_rects[-9:-3]
+                    page_edges["summary"] = main_rects[-3:]
             else:
                 assert (len(main_rects) - (6 + 7)) % 7 == 0, len(main_rects)  # Number of edges is 6 + 7 + 7 * n
                 page_edges["top"] = main_rects[1:13:2]
