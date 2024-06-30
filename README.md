@@ -17,7 +17,7 @@ pip install -r requirements.txt
 Run the following command:
 
 ```bash
-python -m read-ww-receipt.py input.pdf output.csv
+python read-ww-receipt.py input.pdf output.csv
 ```
 
 where `[input.pdf]` is the path to the Woolworths receipt PDF file and `[output.csv]` is the path to the output CSV file.
