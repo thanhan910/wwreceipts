@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException, File, UploadFile, Response
+from fastapi import FastAPI, HTTPException, File, Form, UploadFile, Response
 from fastapi.responses import HTMLResponse, FileResponse
 
+import time
 import csv
 import io
 import os
@@ -361,18 +362,25 @@ async def create_upload_file(file: UploadFile = File(...)):
     woolworths_summary, woolworths_tables = get_woolworths_data(pages)
     woolworths_tables_new = create_new_table(woolworths_tables)
     woolworths_tables_new_df = pl.DataFrame(woolworths_tables_new[1:], schema=woolworths_tables_new[0])
-    
-    # woolworths_tables_new_df.write_csv(output_path)
-    # print(woolworths_summary)
+    csv_file_path = f"{time.time()}.csv"
+    woolworths_tables_new_df.write_csv(csv_file_path)
 
-    # Here you can add any processing you need on the PDF file
-    # 
-    # return {"info": f"File '{file.filename}' saved at '{file_location}'"}
     content = f"""
 <body>
 <h1>Woolworths Summary</h1>
-{woolworths_summary}
+{
+    "<br>".join(f"{text} {value}" for text, value in woolworths_summary)
+}
 <h1>Woolworths Tables</h1>
+<form action="/upload-pdf/" enctype="multipart/form-data" method="post">
+<input name="file" type="file">
+<input type="submit">
+</form>
+<form action="/download-csv/" method="post">
+<input type="hidden" name="filepath" value="{csv_file_path}">
+<input type="hidden" name="filename" value="{file.filename.removesuffix('.pdf')}.csv">
+<input type="submit" value="Download CSV">
+</form>
 <table>
 <thead>
 {"".join(f"<th>{col}</th>" for col in woolworths_tables_new[0])}
@@ -380,13 +388,16 @@ async def create_upload_file(file: UploadFile = File(...)):
 <tbody>
 {" ".join("<tr>" + "".join(f"<td>{cell}</td>" if cell is not None else f"<td></td>" for cell in row) + "</tr>" for row in woolworths_tables_new[1:])}
 </tbody>
-<form action="/upload-pdf/" enctype="multipart/form-data" method="post">
-<input name="file" type="file">
-<input type="submit">
-</form>
+</table>
 </body>
     """
     return HTMLResponse(content=content)
+
+
+@app.post("/download-csv/")
+async def download_csv(filepath: str = Form(...), filename: str = Form(...)):
+    return FileResponse(filepath, media_type='text/csv', filename=filename)
+
 
 @app.get("/")
 async def main():
