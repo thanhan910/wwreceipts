@@ -403,6 +403,8 @@ async def download_csv(filepath: str = Form(...), filename: str = Form(...)):
 async def main():
     content = """
 <body>
+<h1>Woolworths Receipts</h1>
+<p>Upload a Woolworths receipt PDF file to extract the summary and tables and convert it to CSV.</p>
 <form action="/upload-pdf/" enctype="multipart/form-data" method="post">
 <input name="file" type="file">
 <input type="submit">
