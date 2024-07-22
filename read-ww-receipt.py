@@ -180,9 +180,9 @@ def get_pages_edges_data(pages):
                     page_edges["bottom"] = main_rects[-9:-3]
                     page_edges["summary"] = main_rects[-3:]
             else:
-                assert (len(main_rects) - (6 + 7)) % 7 == 0, len(main_rects)  # Number of edges is 6 + 7 + 7 * n
+                assert (len(main_rects) - (6 + 7)) % 7 in [0, 6], len(main_rects)  # Number of edges is 6 + 7 + 7 * n (+ 6)
                 page_edges["top"] = main_rects[1:13:2]
-                page_edges["side"] = main_rects[0:13:2] + main_rects[13:]
+                page_edges["side"] = main_rects[0:13:2] + (main_rects[13:-6] if (len(main_rects) - (6 + 7)) % 7 == 6 else main_rects[13:])
                 assert len(page_edges["side"]) % 7 == 0, len(page_edges["side"])
                 page_edges["side"] = [page_edges["side"][i:i + 7] for i in range(0, len(page_edges["side"]), 7)] # Split into chunks of 7
 
